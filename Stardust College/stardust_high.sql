@@ -8,7 +8,7 @@ CREATE SCHEMA stardust;
 USE stardust;
 
 
--- Create tables
+-- PART I: Create tables
 CREATE TABLE staff_positions (
 	position_id INTEGER PRIMARY KEY,
     position_name VARCHAR(50) NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE academic_year (
 
 CREATE TABLE term (
 	term_id INTEGER PRIMARY KEY,
-    term VARCHAR(10) NOT NULL,
+    term_name VARCHAR(20) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     academic_year VARCHAR(20) NOT NULL REFERENCES academic_year(year_id)
@@ -115,3 +115,104 @@ CREATE TABLE results (
     subject_date DATE
 );
 
+-- PART II: Database Objects
+-- 1. Academic Year triggers
+CREATE TRIGGER year_id
+BEFORE INSERT ON academic_year
+FOR EACH ROW 
+	SET new.year_id = CONCAT(
+						YEAR(start_date), 
+						'/',
+                        YEAR(end_date)
+					);
+CREATE TRIGGER student_class_update
+AFTER INSERT ON academic_year
+FOR EACH ROW
+	UPDATE students
+    SET class_id = class_id + 1
+    WHERE class_id < 7;
+CREATE TRIGGER num_students_class
+AFTER INSERT ON academic_year
+FOR EACH ROW
+FOLLOWS student_class_update
+	UPDATE classes
+    SET num_students = (SELECT 
+							COUNT(*) 
+						FROM students
+                        WHERE classes.class_id = students.class_id
+                        )
+	WHERE classes.class_id > 0;
+
+-- Staff Table Triggers
+CREATE TRIGGER staff_id
+BEFORE INSERT ON staff
+FOR EACH ROW
+	SET new.staff_id = CONCAT(
+							new.position_id, 
+							00,
+							(SELECT num_staff FROM staff_positions WHERE staff_position.positions_id = new.position_id)
+						);
+CREATE TRIGGER staff_email 
+BEFORE INSERT ON staff
+FOR EACH ROW
+FOLLOWS staff_id
+	SET new.email = CASE WHEN middle_name IS NOT NULL
+						THEN CONCAT(first_name, '.', LEFT(middle_name, 1),'.', lastname, '@staff.stardust.com')
+					ELSE CONCAT(first_name, '.', lastname, '@staff.stardust.com')
+                    END;
+CREATE TRIGGER update_num_staff
+AFTER INSERT ON staff
+FOR EACH ROW
+	UPDATE staff_positions
+	SET num_staff = num_staff + 1
+    WHERE position_id = new.position_id;
+
+
+-- Students Table Triggers
+CREATE TRIGGER student_id
+BEFORE INSERT ON students
+FOR EACH ROW
+	SET new.student_id = CONCAT(
+						YEAR(date_joined), 
+                        (
+							SELECT num_students
+                            FROM classes
+                            WHERE classes.class_id = new.class_id
+						)+101
+					);
+CREATE TRIGGER student_email
+BEFORE INSERT ON students
+FOR EACH ROW
+FOLLOWS student_id
+	SET new.email = CASE WHEN middle_name IS NOT NULL
+						THEN CONCAT(first_name, '.', LEFT(middle_name, 1),'.', lastname, '@student.stardust.com')
+					ELSE CONCAT(first_name, '.', lastname, '@student.stardust.com')
+                    END;
+CREATE TRIGGER update_class_students
+AFTER INSERT ON students
+FOR EACH ROW
+	UPDATE classes
+    SET num_students = num_students + 1
+    WHERE classes.class_id = new.class_id;
+
+-- Result Triggers
+CREATE TRIGGER result_date
+BEFORE INSERT ON results
+FOR EACH ROW 
+	SET new.subject_date = CAST(NOW() AS DATE);
+    
+-- Term Triggers
+CREATE TRIGGER term_id
+BEFORE INSERT ON term
+FOR EACH ROW
+	SET new.term_id = CONCAT(
+						REPLACE(
+							REPLACE(
+								'2022/2023', '20', '')
+							, '/', '')
+						, CASE WHEN term_name = 'First' THEN '01'
+								WHEN term_name = 'Second' THEN '02'
+                                WHEN term_name = 'Third' THEN '03'
+							ELSE NULL
+                            END
+						);
