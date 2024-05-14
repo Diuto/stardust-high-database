@@ -32,7 +32,8 @@ CREATE TABLE genders (
 
 CREATE TABLE grades (
 	grade_id VARCHAR(5) PRIMARY KEY,
-    min_score INTEGER
+    	min_score INTEGER,
+	honour VARCHAR(20)	
 );
 
 CREATE TABLE academic_year (
