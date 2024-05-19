@@ -260,3 +260,63 @@ VALUES
 ('Third', '2023-04-21', '2023-07-23', '2022/2023');
 
 SELECT * FROM term;
+
+
+INSERT INTO results 
+VALUES
+(2020101, 101, '2022/2023', 222301, 17, 13, 42, '2022-12-03'),
+(2020101, 201, '2022/2023', 222301, 12, 14, 39, '2022-12-03'),
+(2020101, 202, '2022/2023', 222301, 13, 10, 45, '2022-12-03'),
+(2020101, 203, '2022/2023', 222301, 18, 19, 51, '2022-12-03'),
+(2020101, 204, '2022/2023', 222301, 9, 16, 43, '2022-12-03'),
+(2020101, 205, '2022/2023', 222301, 17, 17, 34, '2022-12-03'),
+(2020101, 208, '2022/2023', 222301, 15, 15, 48, '2022-12-03'),
+(2020101, 209, '2022/2023', 222301, 11, 13, 37, '2022-12-03'),
+(2020101, 210, '2022/2023', 222301, 10, 20, 47, '2022-12-03');
+
+SELECT * FROM results;
+
+SELECT
+    COALESCE(s.subject_name, 'Overall Avg') AS subjects,
+    ROUND(AVG(test1+test2+exam), 2) AS scores
+FROM results r
+LEFT JOIN subjects s ON r.subject_id = s.subject_id
+GROUP BY s.subject_name WITH ROLLUP;
+
+
+/* WITH res1 AS (
+	SELECT
+		s.subject_name,
+		test1,
+		test2,
+		exam,
+		test1+test2+exam AS total
+	FROM results r
+	LEFT JOIN subjects s ON r.subject_id = s.subject_id
+	WHERE student_id = 2020101 and term_id = 222301
+	UNION
+	SELECT 
+		'Overall Avg:',
+		null,
+		NULL,
+		null,
+		ROUND(AVG(test1+test2+exam), 2)
+	FROM results
+	WHERE student_id = 2020101 and term_id = 222301
+),
+grad AS (
+	SELECT *, COALESCE(LAG(min_score, 1) OVER(), 100) AS next_score
+	FROM grades
+)
+SELECT 
+	subject_name,
+    test1, test2, exam,
+    total,
+    grade_id AS grade,
+    honour
+FROM res1 r
+LEFT JOIN grad g
+ON r.total > g.min_score
+	AND r.total BETWEEN g.min_score AND next_score;
+    
+;*/

@@ -32,13 +32,8 @@ CREATE TABLE genders (
 
 CREATE TABLE grades (
 	grade_id VARCHAR(5) PRIMARY KEY,
-<<<<<<< Updated upstream
-    	min_score INTEGER,
-	honour VARCHAR(20)	
-=======
-    min_score INTEGER,
-    honour VARCHAR(20)
->>>>>>> Stashed changes
+	min_score INTEGER,
+	honour VARCHAR(20)
 );
 
 CREATE TABLE academic_year (
@@ -219,11 +214,14 @@ FOR EACH ROW
     WHERE classes.class_id = new.class_id;
 
 -- Result Triggers
+/*DROP TRIGGER result_date;
+
 CREATE TRIGGER result_date
 BEFORE INSERT ON results
 FOR EACH ROW 
-	SET new.subject_date = CAST(NOW() AS DATE);
-    
+	SET new.subject_date = CAST(NOW() AS DATE);*/
+
+      
 -- Term Triggers
 DROP TRIGGER term_id;
 
@@ -241,8 +239,6 @@ FOR EACH ROW
 							ELSE NULL
                             END
 						);
-<<<<<<< Updated upstream
-=======
 
 -- Guardian Triggers
 DROP TRIGGER guardian_id;
@@ -253,4 +249,4 @@ FOR EACH ROW
 								THEN 1001
                                 ELSE (SELECT MAX(guardian_id) FROM guardians) + 1
 						END;
->>>>>>> Stashed changes
+
