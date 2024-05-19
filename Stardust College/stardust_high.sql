@@ -32,12 +32,17 @@ CREATE TABLE genders (
 
 CREATE TABLE grades (
 	grade_id VARCHAR(5) PRIMARY KEY,
+<<<<<<< Updated upstream
     	min_score INTEGER,
 	honour VARCHAR(20)	
+=======
+    min_score INTEGER,
+    honour VARCHAR(20)
+>>>>>>> Stashed changes
 );
 
 CREATE TABLE academic_year (
-	year_id VARCHAR(20),
+	year_id VARCHAR(20) PRIMARY KEY,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL
 );
@@ -53,8 +58,9 @@ CREATE TABLE term (
 CREATE TABLE subjects (
 	subject_id INTEGER PRIMARY KEY,
     subject_name VARCHAR(70) NOT NULL,
-    teacher_id INTEGER,
-    category VARCHAR (20) NOT NULL
+    category VARCHAR (20) NOT NULL,
+    elective INT,
+    teacher_id INTEGER
 );
 
 CREATE TABLE staff (
@@ -67,6 +73,7 @@ CREATE TABLE staff (
     phone VARCHAR(20),
     position_id INTEGER NOT NULL,
     marital_id INTEGER,
+    date_joined DATE,
     FOREIGN KEY (position_id) REFERENCES staff_positions (position_id),
     FOREIGN KEY (marital_id) REFERENCES marital_status (status_id)
 );
@@ -80,11 +87,12 @@ CREATE TABLE classes (
 );
 
 CREATE TABLE guardians (
-	guardians_id INTEGER PRIMARY KEY,
+	guardian_id INTEGER PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
     middle_name VARCHAR(50),
     surname VARCHAR(50) NOT NULL,
     email VARCHAR(150) NOT NULL,
+    gender_id INTEGER REFERENCES genders(gender_id),
     phone VARCHAR(20),
     guardian_type_id INTEGER,
     marital_status_id INTEGER,
@@ -98,7 +106,7 @@ CREATE TABLE students(
     middle_name VARCHAR(50),
     surname VARCHAR(50) NOT NULL,
     email VARCHAR(150),
-    gender VARCHAR(20) REFERENCES genders(gender_id),
+    gender_id INT REFERENCES genders(gender_id),
     date_of_birth DATE,
     guardian_id INTEGER NOT NULL REFERENCES guardians(guardian_id),
     date_joined DATE NOT NULL,
@@ -118,20 +126,24 @@ CREATE TABLE results (
 
 -- PART II: Database Objects
 -- 1. Academic Year triggers
+DROP TRIGGER year_id;
+DROP TRIGGER student_class_update;
+DROP TRIGGER num_students_class;
+
 CREATE TRIGGER year_id
 BEFORE INSERT ON academic_year
 FOR EACH ROW 
 	SET new.year_id = CONCAT(
-						YEAR(start_date), 
+						YEAR(new.start_date), 
 						'/',
-                        YEAR(end_date)
+                        YEAR(new.end_date)
 					);
 CREATE TRIGGER student_class_update
 AFTER INSERT ON academic_year
 FOR EACH ROW
 	UPDATE students
     SET class_id = class_id + 1
-    WHERE class_id < 7;
+    WHERE students.student_id > 0 AND students.class_id < 7;
 CREATE TRIGGER num_students_class
 AFTER INSERT ON academic_year
 FOR EACH ROW
@@ -145,21 +157,27 @@ FOLLOWS student_class_update
 	WHERE classes.class_id > 0;
 
 -- Staff Table Triggers
+DROP TRIGGER staff_id;
+DROP TRIGGER staff_email;
+DROP TRIGGER update_num_staff;
+
 CREATE TRIGGER staff_id
 BEFORE INSERT ON staff
 FOR EACH ROW
 	SET new.staff_id = CONCAT(
 							new.position_id, 
-							00,
-							(SELECT num_staff FROM staff_positions WHERE staff_position.positions_id = new.position_id)
+							CASE WHEN (SELECT num_staff FROM staff_positions WHERE staff_positions.position_id = new.position_id) < 9
+								THEN '00'
+							ELSE '0' END,
+							(SELECT num_staff FROM staff_positions WHERE staff_positions.position_id = new.position_id)+1
 						);
 CREATE TRIGGER staff_email 
 BEFORE INSERT ON staff
 FOR EACH ROW
 FOLLOWS staff_id
-	SET new.email = CASE WHEN middle_name IS NOT NULL
-						THEN CONCAT(first_name, '.', LEFT(middle_name, 1),'.', lastname, '@staff.stardust.com')
-					ELSE CONCAT(first_name, '.', lastname, '@staff.stardust.com')
+	SET new.email = CASE WHEN new.middle_name IS NOT NULL
+						THEN LOWER(CONCAT(new.first_name, '.', LEFT(new.middle_name, 1),'.', new.surname, '@staff.stardust.com'))
+					ELSE LOWER(CONCAT(new.first_name, '.', new.surname, '@staff.stardust.com'))
                     END;
 CREATE TRIGGER update_num_staff
 AFTER INSERT ON staff
@@ -170,11 +188,15 @@ FOR EACH ROW
 
 
 -- Students Table Triggers
+DROP TRIGGER student_id;
+DROP TRIGGER student_email;
+DROP TRIGGER update_num_class_students;
+
 CREATE TRIGGER student_id
 BEFORE INSERT ON students
 FOR EACH ROW
 	SET new.student_id = CONCAT(
-						YEAR(date_joined), 
+						YEAR(NEW.date_joined), 
                         (
 							SELECT num_students
                             FROM classes
@@ -185,11 +207,11 @@ CREATE TRIGGER student_email
 BEFORE INSERT ON students
 FOR EACH ROW
 FOLLOWS student_id
-	SET new.email = CASE WHEN middle_name IS NOT NULL
-						THEN CONCAT(first_name, '.', LEFT(middle_name, 1),'.', lastname, '@student.stardust.com')
-					ELSE CONCAT(first_name, '.', lastname, '@student.stardust.com')
+	SET new.email = CASE WHEN new.middle_name IS NOT NULL
+						THEN LOWER(CONCAT(new.first_name, '.', LEFT(new.middle_name, 1),'.', new.surname, '@student.stardust.com'))
+					ELSE LOWER(CONCAT(new.first_name, '.', new.surname, '@student.stardust.com'))
                     END;
-CREATE TRIGGER update_class_students
+CREATE TRIGGER update_num_class_students
 AFTER INSERT ON students
 FOR EACH ROW
 	UPDATE classes
@@ -203,17 +225,32 @@ FOR EACH ROW
 	SET new.subject_date = CAST(NOW() AS DATE);
     
 -- Term Triggers
+DROP TRIGGER term_id;
+
 CREATE TRIGGER term_id
 BEFORE INSERT ON term
 FOR EACH ROW
 	SET new.term_id = CONCAT(
 						REPLACE(
 							REPLACE(
-								'2022/2023', '20', '')
+								new.academic_year, '20', '')
 							, '/', '')
-						, CASE WHEN term_name = 'First' THEN '01'
-								WHEN term_name = 'Second' THEN '02'
-                                WHEN term_name = 'Third' THEN '03'
+						, CASE WHEN new.term_name = 'First' THEN '01'
+								WHEN new.term_name = 'Second' THEN '02'
+                                WHEN new.term_name = 'Third' THEN '03'
 							ELSE NULL
                             END
 						);
+<<<<<<< Updated upstream
+=======
+
+-- Guardian Triggers
+DROP TRIGGER guardian_id;
+CREATE TRIGGER guardian_id
+BEFORE INSERT ON guardians
+FOR EACH ROW
+	SET new.guardian_id = CASE WHEN (SELECT MAX(guardian_id) FROM guardians) IS NULL 
+								THEN 1001
+                                ELSE (SELECT MAX(guardian_id) FROM guardians) + 1
+						END;
+>>>>>>> Stashed changes
