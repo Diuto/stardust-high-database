@@ -58,8 +58,9 @@ GRANT					-- Grants privileges to the new role
 	ALTER,
     CREATE TEMPORARY TABLES,
     CREATE VIEW,
-    EVENT, 
-    INDEX, 
+    EVENT,
+    EXECUTE,
+    INDEX,
     INSERT, 
     SELECT, 
     SHOW VIEW, 
@@ -72,8 +73,8 @@ TO
 'robert.clark'@'staff.stardust.com', 'stephen.w.lopez'@'staff.stardust.com';
 
 -- Select privilege for the form teachers so they can use stored procedures
-GRANT SELECT ON stardust.*
-TO 
+GRANT SELECT, EXECUTE ON stardust.*
+TO
 	'nathan.l.bailey'@'staff.stardust.com',
 	'brianna.e.allen'@'staff.stardust.com',
 	'nicholas.w.roberts'@'staff.stardust.com',
@@ -81,4 +82,6 @@ TO
 	'alyssa.n.simmons'@'staff.stardust.com',
 	'alexandra.l.hernandez'@'staff.stardust.com',
 	'alexandra.m.wilson'@'staff.stardust.com';
+
+COMMIT;
 

@@ -64,7 +64,7 @@ CREATE TABLE staff (
     middle_name VARCHAR(50),
     surname VARCHAR(50) NOT NULL,
     email VARCHAR(150),
-    gender_id VARCHAR(50) REFERENCES genders (gender_id),
+    gender_id INTEGER REFERENCES genders (gender_id),
     phone VARCHAR(20),
     position_id INTEGER NOT NULL,
     marital_id INTEGER,
@@ -109,10 +109,10 @@ CREATE TABLE students(
 );
 
 CREATE TABLE results (
-	student_id INTEGER REFERENCES students(student_id),
-    subject_id INTEGER REFERENCES subjects(subject_id),
-    academic_year VARCHAR(25) references academic_year(year_id),
-    term_id INTEGER REFERENCES term(term_id),
+	student_id INTEGER NOT NULL REFERENCES students(student_id),
+    subject_id INTEGER NOT NULL REFERENCES subjects(subject_id),
+    academic_year VARCHAR(25) NOT NULL references academic_year(year_id),
+    term_id INTEGER NOT NULL REFERENCES term(term_id),
     test1 INTEGER,
     test2 INTEGER,
     exam INTEGER,

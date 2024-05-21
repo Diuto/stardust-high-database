@@ -146,7 +146,7 @@ VALUES
 ,('Nathan','Lee','Bailey',2,'08145892807',14,'2019-11-18',3)
 ,('Amber','Sue','Perry',1,'08043895578',14,'2013-1-17',5);
 
-SELECT * FROM staff; -- WHERE POSITION_ID = 16;
+SELECT * FROM staff; -- WHERE position_id =21;
 
 -- Subjects
 INSERT INTO subjects (subject_id,subject_name,category,elective,teacher_id) 
