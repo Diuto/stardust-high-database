@@ -93,7 +93,7 @@ BEGIN
 END //
 DELIMITER ;
 
-CALL guardians_wards(1003);
+-- CALL guardians_wards(1003);
 
 
 -- Student Results
@@ -147,3 +147,57 @@ END //
 DELIMITER ;
 
 -- CALL student_results(2020101, '2022/2023', 'First');
+
+
+-- Teacher's Students
+DELIMITER //
+CREATE PROCEDURE form_teacher_students 
+(IN teach_id INT)
+BEGIN
+	SELECT
+		s.student_id,
+		CASE WHEN s.middle_name IS NULL THEN CONCAT(s.first_name, ' ', s.surname)
+					ELSE CONCAT(s.first_name, ' ', s.middle_name, ' ', s.surname)
+			END AS full_name,
+		s.email,
+		s.date_of_birth,
+		CASE WHEN gd.middle_name IS NULL THEN CONCAT(gd.first_name, ' ', gd.surname)
+					ELSE CONCAT(gd.first_name, ' ', gd.middle_name, ' ', gd.surname)
+			END AS guardian_name,
+		gd.phone AS guardian_contact,
+		gd.email AS guardian_email
+	FROM students s
+	LEFT JOIN classes c
+	ON s.class_id = c.class_id
+	LEFT JOIN genders g
+	ON s.gender_id = g.gender_id
+	LEFT JOIN guardians gd
+	ON gd.guardian_id = s.guardian_id
+	WHERE form_teacher_id = teach_id;
+END //
+DELIMITER ;
+
+-- CALL form_teacher_students(14054);
+
+-- Students in a Class
+DELIMITER //
+CREATE PROCEDURE num_students_class
+(IN class_i VARCHAR(20), OUT num_students INTEGER)
+BEGIN
+	SELECT COUNT(*) INTO num_students
+    FROM students s LEFT JOIN classes c ON s.class_id = c.class_id 
+    WHERE class_name LIKE CONCAT('%', class_i, '%');
+    SELECT
+		s.student_id,
+		CASE WHEN s.middle_name IS NULL THEN CONCAT(s.first_name, ' ', s.surname)
+					ELSE CONCAT(s.first_name, ' ', s.middle_name, ' ', s.surname)
+			END AS full_name,
+		s.email
+    FROM students s LEFT JOIN classes c ON s.class_id = c.class_id 
+    WHERE class_name LIKE CONCAT('%', class_i, '%');
+END //
+DELIMITER ;
+
+-- CALL num_students_class ('JSS2', @totalstudents);
+-- SELECT @totalstudents;
+
